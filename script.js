@@ -73,6 +73,9 @@ const inputCadence = document.querySelector(".form__input--cadence");
 const inputElevation = document.querySelector(".form__input--elevation");
 const deleteAllWorkoutsBtn = document.querySelector(".delete-all-btn");
 
+let isFirstTimeRan = true;
+let latlng = [];
+
 // Mozilla fix
 inputDistance.value =
   inputDuration.value =
@@ -86,9 +89,12 @@ class App {
   #mapZoomLevel = 13;
   #mapEvent;
   #workouts = [];
+
   constructor() {
     // Get user's position
-    this._getPosition();
+    setInterval(() => {
+      this._getPosition();
+    }, 1000);
     // Get data from local storage
     this._getLocalStorage();
 
@@ -118,8 +124,9 @@ class App {
     );
 
     const coords = [latitude, longitude];
-
-    this.#map = L.map("map").setView(coords, this.#mapZoomLevel);
+    if (!this.#map) {
+      this.#map = L.map("map").setView(coords, this.#mapZoomLevel);
+    }
     // console.log(this.#map);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -128,11 +135,24 @@ class App {
     }).addTo(this.#map);
 
     // Handling clicks on map
+
     this.#map.on("click", this._showForm.bind(this));
 
     this.#workouts.forEach((work) => {
       this._renderWorkoutMarker(work);
     });
+
+    // tracking user's movements
+
+    latlng.push([latitude, longitude]);
+    console.log(latlng);
+    if (isFirstTimeRan === true) {
+      setInterval(() => {
+        L.polyline(latlng, { color: "red" }).addTo(this.#map);
+        console.log("line?");
+      }, 3000);
+    }
+    isFirstTimeRan = false;
   }
 
   _showForm(mapE) {
@@ -320,5 +340,4 @@ class App {
 
 const app = new App();
 // app._getPosition();
-
 // console.log(firstName);
